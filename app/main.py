@@ -1,4 +1,4 @@
-from app.routers import chat
+from app.routers import weather
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,7 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
+#app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
+app.include_router(weather.router, prefix="/api/v1", tags=["weather"])
 
 
 @app.get("/health")

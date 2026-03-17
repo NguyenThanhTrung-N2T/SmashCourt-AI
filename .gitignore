@@ -32,6 +32,9 @@ htmlcov/
 # Linting
 .ruff_cache/
 
+# Docker
+docker-compose.override.yml
+
 # OS
 .DS_Store
 Thumbs.db
