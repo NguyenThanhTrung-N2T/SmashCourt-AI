@@ -3,8 +3,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: smashcourt-ai
     ports:
       - "8000:8000"
     env_file:
       - .env
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    networks:
+      - smashcourt-network
+
+networks:
+  smashcourt-network:
+    name: smashcourt-network
+    driver: bridge

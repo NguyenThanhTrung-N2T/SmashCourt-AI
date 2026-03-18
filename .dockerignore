@@ -15,6 +15,16 @@ env/
 dist/
 build/
 .git/
+.github/
 *.md
 Dockerfile
 .dockerignore
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+*.pt
+*.pth
+*.onnx
+*.pkl

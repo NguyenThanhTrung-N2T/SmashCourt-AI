@@ -28,6 +28,7 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
 
 # Linting
 .ruff_cache/
@@ -35,6 +36,22 @@ htmlcov/
 # Docker
 docker-compose.override.yml
 
+# Logs
+*.log
+logs/
+
+# Temp files
+tmp/
+temp/
+*.tmp
+
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Model / large binary files (nếu có)
+*.pt
+*.pth
+*.onnx
+*.pkl

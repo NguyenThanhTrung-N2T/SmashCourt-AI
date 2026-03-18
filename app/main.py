@@ -31,6 +31,8 @@ app.add_middleware(
 #app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
 app.include_router(weather.router, prefix="/api/v1", tags=["weather"])
 
+# Swagger UI
+print("Swagger UI: http://localhost:8000/docs")
 
 @app.get("/health")
 async def health_check():
