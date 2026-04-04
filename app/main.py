@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from app.routers import analytics_router, chat_router, suggest_router, weather
@@ -13,9 +14,7 @@ async def lifespan(app: FastAPI):
     print("SmashCourt AI service shutting down.")
 
 
-import os as _os
-
-_ENV = _os.getenv("APP_ENV", "development")
+_ENV = os.getenv("APP_ENV", "development")
 _docs_url = "/docs" if _ENV == "development" else None
 _redoc_url = "/redoc" if _ENV == "development" else None
 
