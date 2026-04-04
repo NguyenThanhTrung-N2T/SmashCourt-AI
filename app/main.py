@@ -13,6 +13,12 @@ async def lifespan(app: FastAPI):
     print("SmashCourt AI service shutting down.")
 
 
+import os as _os
+
+_ENV = _os.getenv("APP_ENV", "development")
+_docs_url = "/docs" if _ENV == "development" else None
+_redoc_url = "/redoc" if _ENV == "development" else None
+
 app = FastAPI(
     title="SmashCourt AI Service",
     description=(
@@ -25,6 +31,8 @@ app = FastAPI(
     ),
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
 )
 
 app.add_middleware(
