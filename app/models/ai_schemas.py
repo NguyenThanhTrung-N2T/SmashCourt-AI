@@ -194,3 +194,124 @@ class CancellationResponse(AiBaseResponse):
     branch_id: str
     period: str
     insights: list[InsightItem]
+
+
+# ─── New Group: Pricing & Promotion & Strategic Suggestions ──────────────────
+
+class OccupancyPatternItem(BaseModel):
+    period: str
+    occupancy_rate: float
+    total_slots: int
+    booked_slots: int
+
+
+class RevenuePatternItem(BaseModel):
+    period: str
+    revenue: float
+    booking_count: int
+    average_revenue_per_booking: float
+
+
+class PricingSuggestionRequest(BaseModel):
+    branch_id: str | None = None
+    branch_name: str | None = None
+    period: str
+    average_occupancy_rate: float
+    occupancy_patterns: list[OccupancyPatternItem] = []
+    revenue_patterns: list[RevenuePatternItem] = []
+
+
+class PricingInsight(BaseModel):
+    category: str                     # "revenue" | "occupancy" | "pricing"
+    severity: str                     # "info" | "warning" | "critical" | "positive"
+    title: str
+    description: str
+    recommendation: str | None = None
+    suggested_increase_percent: float | None = None  # Must be between -20.0 and +30.0
+
+
+class PricingSuggestionResponse(AiBaseResponse):
+    branch_id: str
+    period: str
+    insights: list[PricingInsight]
+
+
+class PromotionSuggestionRequest(BaseModel):
+    branch_id: str | None = None
+    branch_name: str | None = None
+    period: str
+    occupancy_patterns: list[OccupancyPatternItem] = []
+    revenue_patterns: list[RevenuePatternItem] = []
+
+
+class PromotionInsight(BaseModel):
+    category: str                     # "promotion" | "occupancy" | "revenue"
+    severity: str                     # "info" | "warning" | "critical" | "positive"
+    title: str
+    description: str
+    recommendation: str | None = None
+    discount_percent: float | None = None  # Must be between 10.0 and 50.0
+    target_segment: str | None = None
+    estimated_revenue_impact: float | None = None
+
+
+class PromotionSuggestionResponse(AiBaseResponse):
+    branch_id: str
+    period: str
+    insights: list[PromotionInsight]
+
+
+class StrategicBranchPerformanceItem(BaseModel):
+    branch_name: str
+    revenue: float
+    booking_count: int
+    average_revenue_per_booking: float
+
+
+class StrategicSuggestionRequest(BaseModel):
+    period: str
+    total_branches: int
+    total_revenue: float
+    total_bookings: int
+    branch_performances: list[StrategicBranchPerformanceItem] = []
+
+
+class StrategicInsight(BaseModel):
+    category: str                     # "expansion" | "staffing" | "performance" | "optimization"
+    severity: str                     # "info" | "warning" | "critical" | "positive"
+    title: str
+    description: str
+    recommendation: str | None = None
+
+
+class BranchPerformance(BaseModel):
+    branch_id: str
+    branch_name: str
+    revenue: float
+    occupancy_rate: float
+    total_bookings: int
+    performance_rating: str           # "excellent" | "good" | "average" | "poor"
+
+
+class StaffingRecommendation(BaseModel):
+    branch_id: str
+    branch_name: str
+    recommendation: str               # "increase" | "decrease" | "maintain"
+    reasoning: str
+
+
+class DemandForecast(BaseModel):
+    forecast_days: int
+    expected_growth_percent: float
+    peak_days: list[str]
+    summary: str
+
+
+class StrategicSuggestionResponse(AiBaseResponse):
+    period: str
+    insights: list[StrategicInsight]
+    branch_performances: list[BranchPerformance]
+    staffing_recommendations: list[StaffingRecommendation]
+    demand_forecast: DemandForecast | None = None
+
+

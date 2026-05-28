@@ -8,11 +8,14 @@ from app.models.ai_schemas import (
     OccupancyRequest,
     ProfileSuggestionRequest,
     RevenueRequest,
+    PricingSuggestionRequest,
+    PromotionSuggestionRequest,
+    StrategicSuggestionRequest,
 )
 
 # ─── System Prompts ──────────────────────────────────────────────────────────
 
-CHATBOT_SYSTEM_PROMPT = """Bạn là trợ lý AI của SmashCourt — hệ thống đặt sân cầu lông và pickleball.
+CHATBOT_SYSTEM_PROMPT = """Bạn là trợ lý AI của SmashCourt — hệ thống đặt sân cầu lông.
 Nhiệm vụ của bạn là hỗ trợ khách hàng một cách thân thiện, ngắn gọn và chính xác.
 
 Quy tắc:
@@ -98,6 +101,106 @@ Format trả về:
       "recommendation": "hành động đề xuất hoặc null"
     }
   ]
+}
+"""
+
+PRICING_SUGGEST_SYSTEM_PROMPT = """Bạn là chuyên gia phân tích giá động của SmashCourt.
+Phân tích tỉ lệ lấp đầy và doanh thu của chi nhánh để đưa ra đề xuất điều chỉnh giá sân cầu lông theo khung giờ.
+
+Quy tắc:
+- Trả lời bằng tiếng Việt, chuyên nghiệp.
+- Chỉ đưa ra đề xuất thay đổi giá bằng phần trăm tăng/giảm (`suggested_increase_percent`).
+- Giá trị `suggested_increase_percent` BẮT BUỘC phải nằm trong khoảng từ -20.0 đến +30.0 (Ví dụ: -10.0 nghĩa là giảm giá 10%, 15.0 nghĩa là tăng giá 15%).
+- Đưa ra tối đa 5 đề xuất/insight.
+- Luôn trả về JSON hợp lệ đúng định dạng bên dưới.
+
+Format trả về:
+{
+  "insights": [
+    {
+      "category": "pricing",
+      "severity": "info|warning|critical|positive",
+      "title": "Tên đề xuất ngắn gọn",
+      "description": "Mô tả chi tiết lý do và dữ liệu lấp đầy thực tế",
+      "recommendation": "Khuyến nghị hành động cụ thể",
+      "suggested_increase_percent": 15.0
+    }
+  ]
+}
+"""
+
+PROMOTION_SUGGEST_SYSTEM_PROMPT = """Bạn là chuyên gia thiết kế chương trình khuyến mãi của SmashCourt.
+Phân tích tỉ lệ lấp đầy và doanh thu để đề xuất các chương trình khuyến mãi cho các giờ thấp điểm của sân cầu lông.
+
+Quy tắc:
+- Trả lời bằng tiếng Việt, thân thiện và thực tế.
+- BẮT BUỘC đề xuất phần trăm giảm giá (`discount_percent`) trong khoảng từ 10.0 đến 50.0 (kiểu số thực, ví dụ: 20.0).
+- Đưa ra tối đa 5 đề xuất.
+- Luôn trả về JSON hợp lệ đúng định dạng bên dưới.
+
+Format trả về:
+{
+  "insights": [
+    {
+      "category": "promotion",
+      "severity": "info|warning|critical|positive",
+      "title": "Tên chương trình khuyến mãi",
+      "description": "Chi tiết lý do đề xuất (ví dụ: giờ vàng sáng sớm vắng khách)",
+      "recommendation": "Cách thức áp dụng chương trình",
+      "discount_percent": 20.0,
+      "target_segment": "Học sinh, sinh viên | Người đi làm | v.v.",
+      "estimated_revenue_impact": 1500000.0
+    }
+  ]
+}
+"""
+
+STRATEGIC_SUGGEST_SYSTEM_PROMPT = """Bạn là giám đốc chiến lược vận hành của SmashCourt.
+Phân tích hiệu năng chéo giữa tất cả các chi nhánh sân cầu lông, đưa ra gợi ý phân bổ nhân sự, cơ hội mở rộng chi nhánh mới và dự báo nhu cầu hệ thống.
+
+Quy tắc:
+- Trả lời bằng tiếng Việt, tầm nhìn chiến lược.
+- Đưa ra tối đa 5 insights/recommendations chung.
+- Đưa ra so sánh hiệu suất cho tối đa 5 chi nhánh (`branch_performances`).
+- Đưa ra tối đa 5 đề xuất phân bổ nhân sự (`staffing_recommendations`).
+- Đưa ra đúng 1 dự báo nhu cầu (`demand_forecast`).
+- Luôn trả về JSON hợp lệ đúng định dạng bên dưới.
+
+Format trả về:
+{
+  "insights": [
+    {
+      "category": "expansion|staffing|performance|optimization",
+      "severity": "info|warning|critical|positive",
+      "title": "tiêu đề",
+      "description": "mô tả phân tích",
+      "recommendation": "đề xuất hành động"
+    }
+  ],
+  "branch_performances": [
+    {
+      "branch_id": "id chi nhánh",
+      "branch_name": "tên chi nhánh",
+      "revenue": 120000000.0,
+      "occupancy_rate": 0.65,
+      "total_bookings": 150,
+      "performance_rating": "excellent|good|average|poor"
+    }
+  ],
+  "staffing_recommendations": [
+    {
+      "branch_id": "id chi nhánh",
+      "branch_name": "tên chi nhánh",
+      "recommendation": "increase|decrease|maintain",
+      "reasoning": "lý do đề xuất tăng/giảm/giữ nguyên nhân sự"
+    }
+  ],
+  "demand_forecast": {
+    "forecast_days": 30,
+    "expected_growth_percent": 15.0,
+    "peak_days": ["Saturday", "Sunday"],
+    "summary": "Tóm tắt dự báo nhu cầu trong 30 ngày tới"
+  }
 }
 """
 
@@ -226,3 +329,70 @@ def build_cancellation_prompt(req: CancellationRequest) -> str:
 
 Hãy phân tích xu hướng hủy và đưa ra gợi ý giảm tỉ lệ hủy.
 """
+
+
+def build_pricing_suggest_prompt(req: PricingSuggestionRequest) -> str:
+    occupancy_lines = "\n".join(
+        f"    + Khung giờ {o.period}: Lấp đầy {o.occupancy_rate:.1%} ({o.booked_slots}/{o.total_slots} slots)"
+        for o in req.occupancy_patterns
+    )
+    revenue_lines = "\n".join(
+        f"    + Khung giờ {r.period}: Doanh thu {r.revenue:,.0f} VNĐ ({r.booking_count} bookings, TB {r.average_revenue_per_booking:,.0f} VNĐ)"
+        for r in req.revenue_patterns
+    )
+
+    return f"""Yêu cầu đề xuất giá động cho chi nhánh: {req.branch_name or 'Hệ thống'}
+Kỳ phân tích: {req.period}
+Tỉ lệ lấp đầy trung bình: {req.average_occupancy_rate:.1%}
+
+Dữ liệu chi tiết:
+- Phân bổ lấp đầy theo khung giờ:
+{occupancy_lines if occupancy_lines else "    (Không có dữ liệu)"}
+- Phân bổ doanh thu theo khung giờ:
+{revenue_lines if revenue_lines else "    (Không có dữ liệu)"}
+
+Hãy phân tích và đưa ra đề xuất điều chỉnh giá sân. Nhớ chỉ đề xuất trong khoảng từ -20.0 đến +30.0%.
+"""
+
+
+def build_promotion_suggest_prompt(req: PromotionSuggestionRequest) -> str:
+    occupancy_lines = "\n".join(
+        f"    + Khung giờ {o.period}: Lấp đầy {o.occupancy_rate:.1%} ({o.booked_slots}/{o.total_slots} slots)"
+        for o in req.occupancy_patterns
+    )
+    revenue_lines = "\n".join(
+        f"    + Khung giờ {r.period}: Doanh thu {r.revenue:,.0f} VNĐ ({r.booking_count} bookings)"
+        for r in req.revenue_patterns
+    )
+
+    return f"""Yêu cầu đề xuất chương trình khuyến mãi cho chi nhánh: {req.branch_name or 'Hệ thống'}
+Kỳ phân tích: {req.period}
+
+Dữ liệu chi tiết:
+- Tỉ lệ lấp đầy theo khung giờ:
+{occupancy_lines if occupancy_lines else "    (Không có dữ liệu)"}
+- Doanh thu theo khung giờ:
+{revenue_lines if revenue_lines else "    (Không có dữ liệu)"}
+
+Hãy phân tích tìm ra các giờ thấp điểm vắng khách (lấp đầy < 40%) và thiết kế chương trình khuyến mãi giảm giá từ 10% đến 50%.
+"""
+
+
+def build_strategic_suggest_prompt(req: StrategicSuggestionRequest) -> str:
+    performance_lines = "\n".join(
+        f"    + Chi nhánh {b.branch_name}: Doanh thu {b.revenue:,.0f} VNĐ | {b.booking_count} bookings (TB {b.average_revenue_per_booking:,.0f} VNĐ/booking)"
+        for b in req.branch_performances
+    )
+
+    return f"""Yêu cầu phân tích chiến lược toàn hệ thống
+Kỳ phân tích: {req.period}
+Tổng số chi nhánh: {req.total_branches}
+Tổng doanh thu hệ thống: {req.total_revenue:,.0f} VNĐ
+Tổng lượng bookings toàn chuỗi: {req.total_bookings}
+
+Chi tiết hiệu suất từng chi nhánh:
+{performance_lines if performance_lines else "    (Không có dữ liệu)"}
+
+Hãy phân tích so sánh hiệu suất chéo giữa các chi nhánh, đưa ra đánh giá, đề xuất nhân sự (tăng/giảm/giữ nguyên), cơ hội mở rộng và dự báo nhu cầu.
+"""
+
