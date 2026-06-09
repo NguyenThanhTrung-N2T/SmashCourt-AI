@@ -1,8 +1,4 @@
-"""
-Suggest Router — Personal suggestion endpoints
-  POST /api/v1/ai/suggest/booking  — Gợi ý khi đặt sân
-  POST /api/v1/ai/suggest/profile  — Gợi ý trên trang cá nhân
-"""
+# suggest router - cung cấp các gợi ý cá nhân hóa và gợi ý chiến lược
 import logging
 from datetime import datetime
 
@@ -41,7 +37,9 @@ router = APIRouter(prefix="/ai/suggest", tags=["AI — Personal Suggestions"])
 
 
 def _parse_suggestions(raw: list[dict]) -> list[SuggestionItem]:
-    """Parse list dict từ LLM thành list SuggestionItem, bỏ qua item lỗi."""
+    """
+    parse danh sách dictionary trả về từ llm thành list SuggestionItem
+    """
     items: list[SuggestionItem] = []
     for s in raw:
         try:
@@ -54,14 +52,13 @@ def _parse_suggestions(raw: list[dict]) -> list[SuggestionItem]:
 @router.post("/booking", response_model=BookingSuggestionResponse, summary="Gợi ý sân/giờ khi đặt sân")
 async def suggest_booking(req: BookingSuggestionRequest):
     """
-    Nhận lịch sử booking của khách hàng, phân tích và trả về gợi ý sân/giờ phù hợp
-    để hiển thị khi khách đang trong luồng đặt sân.
+    phân tích lịch sử booking và gợi ý sân hoặc giờ chơi phù hợp khi đang đặt sân
     """
     logger.info(f"Booking suggestion request: user_id={req.user_id}, history_count={len(req.booking_history)}")
     
     if not req.booking_history:
         logger.info(f"No booking history for user {req.user_id}, returning default suggestions")
-        # Khách mới chưa có lịch sử → trả về gợi ý mặc định mà không cần gọi LLM
+        # trả về gợi ý mặc định nếu chưa có lịch sử booking
         return BookingSuggestionResponse(
             user_id=req.user_id,
             suggestions=[
@@ -100,8 +97,7 @@ async def suggest_booking(req: BookingSuggestionRequest):
 @router.post("/profile", response_model=ProfileSuggestionResponse, summary="Gợi ý trên trang cá nhân")
 async def suggest_profile(req: ProfileSuggestionRequest):
     """
-    Nhận lịch sử booking và thông tin loyalty của khách hàng,
-    sinh tóm tắt hành vi và gợi ý cá nhân hóa để hiển thị trên trang cá nhân.
+    phân tích lịch sử booking và tích lũy điểm để hiển thị trên trang cá nhân
     """
     if not req.booking_history:
         return ProfileSuggestionResponse(
@@ -161,7 +157,7 @@ def _parse_promotion_insights(raw: list) -> list[PromotionInsight]:
 @router.post("/pricing", response_model=PricingSuggestionResponse, summary="Gợi ý điều chỉnh giá động")
 async def suggest_pricing(req: PricingSuggestionRequest):
     """
-    Nhận dữ liệu lấp đầy và doanh thu của chi nhánh, gọi Gemini sinh đề xuất tăng/giảm giá.
+    phân tích tỉ lệ lấp đầy và doanh thu để gợi ý thay đổi giá theo khung giờ
     """
     user_content = build_pricing_suggest_prompt(req)
     try:
@@ -185,7 +181,7 @@ async def suggest_pricing(req: PricingSuggestionRequest):
 @router.post("/promotions", response_model=PromotionSuggestionResponse, summary="Gợi ý khuyến mãi giờ thấp điểm")
 async def suggest_promotions(req: PromotionSuggestionRequest):
     """
-    Nhận dữ liệu lấp đầy và doanh thu, đề xuất khuyến mãi cho khung giờ vắng khách.
+    phân tích tỉ lệ lấp đầy để đề xuất khuyến mãi cho khung giờ vắng khách
     """
     user_content = build_promotion_suggest_prompt(req)
     try:

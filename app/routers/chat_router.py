@@ -1,9 +1,4 @@
-"""
-Chat Router — Customer chatbot endpoints
-  POST /api/v1/ai/chat        — Free-form chat
-  GET  /api/v1/ai/chat/faq   — List câu hỏi gợi ý
-  POST /api/v1/ai/chat/faq-reply — Trả lời FAQ cụ thể
-"""
+# chat router - cung cấp endpoint cho chatbot tư vấn
 import logging
 from datetime import datetime
 
@@ -32,7 +27,7 @@ from fastapi import APIRouter, HTTPException
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai/chat", tags=["AI — Chatbot"])
 
-# ─── Mock FAQ list (sẽ thay bằng data từ BE sau) ─────────────────────────────
+# list faq mẫu (sẽ được thay bằng dữ liệu db sau)
 _FAQ_ITEMS: list[FaqItem] = [
     FaqItem(id="faq-1",  question="Giá thuê sân cầu lông là bao nhiêu?",         category="pricing"),
     FaqItem(id="faq-2",  question="Làm thế nào để đặt sân online?",               category="booking"),
@@ -45,11 +40,11 @@ _FAQ_ITEMS: list[FaqItem] = [
 ]
 
 
-# ─── Endpoints ────────────────────────────────────────────────────────────────
-
 @router.post("", response_model=ChatResponse, summary="Chat tự do với AI")
 async def chat(req: ChatRequest):
-    """Nhận câu hỏi tự do của khách hàng, gọi Gemini và trả về câu trả lời kèm gợi ý hành động."""
+    """
+    gọi gemini trả lời tin nhắn tự do và đề xuất hành động tiếp theo
+    """
     logger.info(f"Chat request received: session_id={req.session_id}, message_length={len(req.message)}")
     
     user_content = build_chat_prompt(req.message, req.context)
@@ -74,14 +69,18 @@ async def chat(req: ChatRequest):
 
 @router.get("/faq", response_model=FaqListResponse, summary="Danh sách câu hỏi gợi ý")
 async def get_faq():
-    """Trả về danh sách câu hỏi thường gặp (FAQ) để hiển thị quick-reply buttons."""
+    """
+    lấy danh sách câu hỏi thường gặp
+    """
     logger.info(f"FAQ list requested: returning {len(_FAQ_ITEMS)} items")
     return FaqListResponse(items=_FAQ_ITEMS, total=len(_FAQ_ITEMS))
 
 
 @router.post("/faq-reply", response_model=FaqReplyResponse, summary="Trả lời câu hỏi FAQ")
 async def faq_reply(req: FaqReplyRequest):
-    """Nhận một câu hỏi FAQ cụ thể, gọi Gemini để trả lời chi tiết."""
+    """
+    trả lời câu hỏi faq cụ thể được chọn
+    """
     logger.info(f"FAQ reply request: faq_id={req.faq_id}, question={req.question[:50]}...")
     
     user_content = build_faq_prompt(req.question)

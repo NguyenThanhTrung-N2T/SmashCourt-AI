@@ -7,7 +7,7 @@ from app.routers import analytics_router, chat_router, suggest_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Configure logging
+# Cấu hình logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -51,13 +51,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # TODO: restrict to BE origin in production
+    allow_origins=["*"],          # giới hạn origin ở production sau
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ─── Routers ──────────────────────────────────────────────────────────────────
 PREFIX = "/api/v1"
 
 app.include_router(chat_router.router,      prefix=PREFIX)
@@ -65,12 +64,10 @@ app.include_router(suggest_router.router,   prefix=PREFIX)
 app.include_router(analytics_router.router, prefix=PREFIX)
 
 
-# ─── Health check ─────────────────────────────────────────────────────────────
 @app.get("/health", tags=["system"])
 async def health_check():
     """
-    Health check endpoint với thông tin chi tiết
-    Dùng để verify service đang chạy và môi trường deployment
+    health check endpoint
     """
     return {
         "status": "ok",

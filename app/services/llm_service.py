@@ -1,3 +1,4 @@
+# llm service - tích hợp api với gemini
 import json
 import os
 
@@ -22,10 +23,10 @@ def _get_client() -> genai.Client:
     return _client
 
 
-# ─── Basic call (plain text) ──────────────────────────────────────────────────
-
 async def call_gemini(message: str, context: str | None = None) -> tuple[str, str]:
-    """Gửi message đơn giản tới Gemini, trả về (reply_text, model_name)."""
+    """
+    gửi tin nhắn text thuần tới gemini
+    """
     prompt = message
     if context:
         prompt = f"Context:\n{context}\n\nUser message:\n{message}"
@@ -37,16 +38,12 @@ async def call_gemini(message: str, context: str | None = None) -> tuple[str, st
     return response.text, GEMINI_MODEL
 
 
-# ─── Structured call (with system prompt + JSON output) ──────────────────────
-
 async def call_gemini_structured(
     system_prompt: str,
     user_content: str,
 ) -> tuple[dict, str]:
     """
-    Gọi Gemini với system prompt riêng, yêu cầu trả về JSON.
-    Trả về (parsed_dict, model_name).
-    Ném QuotaExceedError nếu hết free tier.
+    gọi gemini với system prompt và yêu cầu cấu trúc dữ liệu trả về dạng json
     """
     config = types.GenerateContentConfig(
         system_instruction=system_prompt,
@@ -61,13 +58,13 @@ async def call_gemini_structured(
         )
     except Exception as e:
         _handle_gemini_error(e)
-        raise  # unreachable nhưng để type checker vui
+        raise
 
     raw = response.text
     try:
         return json.loads(raw), GEMINI_MODEL
     except json.JSONDecodeError:
-        # Fallback: cố parse nếu có dấu ```json ... ```
+        # xử lý fallback nếu text trả về bị bọc trong markdown block
         cleaned = raw.strip().removeprefix("```json").removesuffix("```").strip()
         return json.loads(cleaned), GEMINI_MODEL
 
@@ -77,8 +74,7 @@ async def call_gemini_text(
     user_content: str,
 ) -> tuple[str, str]:
     """
-    Gọi Gemini với system prompt, trả về plain text (không JSON).
-    Trả về (text, model_name).
+    gọi gemini với system prompt và trả về text thuần
     """
     config = types.GenerateContentConfig(
         system_instruction=system_prompt,
@@ -97,15 +93,17 @@ async def call_gemini_text(
     return response.text.strip(), GEMINI_MODEL
 
 
-# ─── Error handling ───────────────────────────────────────────────────────────
-
 class QuotaExceedError(Exception):
-    """Ném khi Gemini API hết free tier quota (HTTP 429)."""
+    """
+    lỗi vượt quá giới hạn lượt gọi api (free tier)
+    """
     pass
 
 
 class LlmError(Exception):
-    """Lỗi chung từ Gemini API."""
+    """
+    lỗi chung từ dịch vụ llm
+    """
     pass
 
 

@@ -1,10 +1,4 @@
-"""
-Analytics Router — Owner / Manager analytics insight endpoints
-  POST /api/v1/ai/analytics/summary      — Tổng hợp toàn diện
-  POST /api/v1/ai/analytics/revenue      — Phân tích doanh thu
-  POST /api/v1/ai/analytics/occupancy    — Phân tích tỉ lệ lấp đầy
-  POST /api/v1/ai/analytics/cancellation — Phân tích hủy booking
-"""
+# analytics router - cung cấp các endpoint phân tích dữ liệu cho chủ sân và quản lý
 from datetime import datetime
 
 from app.models.ai_schemas import (
@@ -44,7 +38,9 @@ router = APIRouter(prefix="/ai/analytics", tags=["AI — Analytics Insights"])
 
 
 def _parse_insights(raw: list) -> list[InsightItem]:
-    """Parse list dict từ LLM thành list InsightItem, bỏ qua item lỗi."""
+    """
+    parse danh sách insight trả về từ llm thành list InsightItem
+    """
     items = []
     for item in raw:
         try:
@@ -61,8 +57,7 @@ def _parse_insights(raw: list) -> list[InsightItem]:
 )
 async def analytics_summary(req: AnalyticsRequest):
     """
-    Nhận đầy đủ số liệu của một chi nhánh trong một kỳ,
-    trả về tổng hợp insight + khuyến nghị cho chủ hệ thống / quản lý.
+    phân tích tổng hợp số liệu chi nhánh để đưa ra insight và khuyến nghị vận hành
     """
     user_content = build_analytics_summary_prompt(req)
     try:
@@ -90,7 +85,9 @@ async def analytics_summary(req: AnalyticsRequest):
     summary="Phân tích insight doanh thu",
 )
 async def analytics_revenue(req: RevenueRequest):
-    """Nhận số liệu doanh thu, trả về insight và khuyến nghị liên quan đến doanh thu."""
+    """
+    phân tích doanh thu và đề xuất cải thiện
+    """
     user_content = build_revenue_prompt(req)
     try:
         data, model = await call_gemini_structured(ANALYTICS_SYSTEM_PROMPT, user_content)
@@ -116,7 +113,9 @@ async def analytics_revenue(req: RevenueRequest):
     summary="Phân tích tỉ lệ lấp đầy sân",
 )
 async def analytics_occupancy(req: OccupancyRequest):
-    """Nhận số liệu lấp đầy theo giờ, trả về gợi ý tối ưu lịch sân."""
+    """
+    phân tích tỉ lệ lấp đầy theo khung giờ để tối ưu lịch sân
+    """
     user_content = build_occupancy_prompt(req)
     try:
         data, model = await call_gemini_structured(ANALYTICS_SYSTEM_PROMPT, user_content)
@@ -142,7 +141,9 @@ async def analytics_occupancy(req: OccupancyRequest):
     summary="Phân tích xu hướng hủy booking",
 )
 async def analytics_cancellation(req: CancellationRequest):
-    """Nhận số liệu hủy booking, phân tích xu hướng và đề xuất biện pháp giảm hủy."""
+    """
+    phân tích xu hướng hủy đặt sân và đề xuất phương án khắc phục
+    """
     user_content = build_cancellation_prompt(req)
     try:
         data, model = await call_gemini_structured(ANALYTICS_SYSTEM_PROMPT, user_content)
@@ -199,7 +200,7 @@ def _parse_staffing_recommendations(raw: list) -> list[StaffingRecommendation]:
 )
 async def analytics_strategic(req: StrategicSuggestionRequest):
     """
-    Nhận số liệu toàn chuỗi các chi nhánh, so sánh chéo và đưa ra phân tích chiến lược.
+    so sánh hiệu suất giữa các chi nhánh để đưa ra phân tích chiến lược mở rộng và nhân sự
     """
     user_content = build_strategic_suggest_prompt(req)
     try:

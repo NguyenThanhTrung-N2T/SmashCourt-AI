@@ -1,6 +1,4 @@
-"""
-Prompt Builder — Build system prompt và user prompt theo từng use case
-"""
+# prompt builder - thiết lập system prompt và xây dựng user prompt cho các use case
 from app.models.ai_schemas import (
     AnalyticsRequest,
     BookingSuggestionRequest,
@@ -12,8 +10,6 @@ from app.models.ai_schemas import (
     PromotionSuggestionRequest,
     StrategicSuggestionRequest,
 )
-
-# ─── System Prompts ──────────────────────────────────────────────────────────
 
 CHATBOT_SYSTEM_PROMPT = """Bạn là trợ lý AI của SmashCourt — hệ thống đặt sân cầu lông.
 Nhiệm vụ của bạn là hỗ trợ khách hàng một cách thân thiện, ngắn gọn và chính xác.
@@ -204,8 +200,6 @@ Format trả về:
 }
 """
 
-
-# ─── User Prompt Builders ────────────────────────────────────────────────────
 
 def build_chat_prompt(message: str, context: str | None) -> str:
     if context:
