@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("SmashCourt AI service started")
     logger.info(f"Environment: {_ENV}")
-    logger.info(f"Swagger UI: http://localhost:8000/docs")
+    logger.info("Swagger UI: http://localhost:8000/docs")
     yield
     logger.info("SmashCourt AI service shutting down")
 
