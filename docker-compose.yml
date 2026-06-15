@@ -21,4 +21,4 @@ services:
 networks:
   smashcourt-network:
     name: smashcourt-network
-    driver: bridge
+    external: true
