@@ -64,9 +64,30 @@ async def call_gemini_structured(
     try:
         return json.loads(raw), GEMINI_MODEL
     except json.JSONDecodeError:
-        # xử lý fallback nếu text trả về bị bọc trong markdown block
-        cleaned = raw.strip().removeprefix("```json").removesuffix("```").strip()
-        return json.loads(cleaned), GEMINI_MODEL
+        import re
+        # Xử lý fallback: Loại bỏ các block markdown ```json
+        cleaned = raw.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        cleaned = cleaned.strip()
+
+        # Tìm block JSON dạng { ... } lớn nhất nếu Gemini trả về cả chữ bình thường
+        first_brace = cleaned.find('{')
+        last_brace = cleaned.rfind('}')
+        if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+            cleaned = cleaned[first_brace:last_brace+1]
+
+        # Loại bỏ dấu phẩy thừa cuối cùng (trailing commas)
+        cleaned = re.sub(r',(\s*[}\]])', r'\1', cleaned)
+
+        try:
+            return json.loads(cleaned), GEMINI_MODEL
+        except json.JSONDecodeError as final_err:
+            # Ghi log lỗi thô của Gemini để dễ gỡ lỗi
+            logging.getLogger(__name__).error(f"Failed to parse cleaned JSON. Raw response was: {raw}")
+            raise final_err
 
 
 async def call_gemini_text(
