@@ -29,6 +29,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy only application code (no tests, docs, etc.)
 COPY ./app ./app
+RUN chown -R appuser:appgroup /app
 
 # Use non-root user
 USER appuser
