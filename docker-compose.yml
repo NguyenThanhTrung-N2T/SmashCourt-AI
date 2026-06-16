@@ -18,6 +18,20 @@ services:
     networks:
       - smashcourt-network
 
+  ngrok-ai:
+    image: ngrok/ngrok:latest
+    container_name: smashcourt-ngrok-ai
+    ports:
+      - "4041:4040"
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: http ai:8000
+    networks:
+      - smashcourt-network
+    depends_on:
+      - ai
+    restart: unless-stopped
+
 networks:
   smashcourt-network:
     name: smashcourt-network
