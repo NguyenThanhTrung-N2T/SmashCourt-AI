@@ -1,0 +1,10 @@
+# Cấu hình Ruff cho CI và máy dev.
+# Khai báo tường minh bộ luật để kết quả lint không đổi khi Ruff ra bản mới: không có file này thì Ruff dùng bộ
+# luật mặc định của từng phiên bản (Ruff 0.16 bật thêm DTZ, S, BLE, I, PIE, FURB, TRY nên CI đỏ dù mã không đổi).
+# Phiên bản Ruff ghim trong .github/workflows/ci.yml; đổi phiên bản hoặc thêm luật thì chạy `ruff check .` trước.
+
+target-version = "py312"
+
+[lint]
+# Bộ luật mặc định cổ điển của Ruff: pycodestyle (lỗi cú pháp, câu lệnh) + Pyflakes (biến/import thừa, tên chưa định nghĩa)
+select = ["E4", "E7", "E9", "F"]

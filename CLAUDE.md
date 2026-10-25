@@ -8,9 +8,9 @@ FastAPI (Python 3.12) + `google-genai` (Gemini). Cung cấp chatbot, gợi ý đ
 .venv/Scripts/python.exe -m pip install -r requirements.txt
 .venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000    # Swagger /docs khi APP_ENV=development
 .venv/Scripts/python.exe -m compileall -q app                            # kiểm tra cú pháp nhanh
-ruff check .                                                             # = CI (ruff chưa cài trong .venv)
+.venv/Scripts/python.exe -m ruff check .                                # = CI (ruff 0.16.9 đã cài trong .venv; bộ luật ở ruff.toml)
 ```
-CI (`.github/workflows/ci.yml`): `ruff check .` → build Docker image. Chưa có test tự động.
+CI (`.github/workflows/ci.yml`): `ruff check .` (ruff ghim `0.16.9`, luật khai báo tường minh ở `ruff.toml`) + `compileall` → build Docker image. Đổi phiên bản ruff hoặc thêm luật phải sửa cả `ci.yml` và `ruff.toml`, chạy lint trước. Chưa có test tự động.
 
 ## Kiến trúc (chi tiết: skill `smashcourt-ai-architecture`)
 ```
@@ -32,5 +32,5 @@ app/services/prompt_builder.py → {X}_SYSTEM_PROMPT + build_{x}_prompt(req)
 
 ## Quy tắc làm việc
 - **Không tự ý `git commit` / `push` / `merge` / `rebase` / `reset`** — chỉ khi người dùng yêu cầu rõ ràng (xem `../.claude/rules/git-safety.md`).
-- Sửa code xong **phải** chạy `compileall` (và `ruff` nếu có) rồi sửa hết lỗi trước khi báo xong (skill `build-verify`).
+- Sửa code xong **phải** chạy `compileall` và `ruff check .` rồi sửa hết lỗi trước khi báo xong (skill `build-verify`).
 - Endpoint/schema/prompt mới theo skill `smashcourt-ai-architecture`.

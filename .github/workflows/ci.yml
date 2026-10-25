@@ -14,19 +14,22 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-          cache: "pip"
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt ruff
+      # Ghim phiên bản: bộ luật khai báo ở ruff.toml, bản Ruff mới không được tự đổi kết quả CI
+      - name: Install Ruff
+        run: pip install ruff==0.16.9
 
       - name: Lint with Ruff
         run: ruff check .
+
+      - name: Check syntax
+        run: python -m compileall -q app
 
   # ─── Job 2: Docker build check ───────────────────────────────────────────────
   docker-build:
@@ -36,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
