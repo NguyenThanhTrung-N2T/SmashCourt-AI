@@ -31,6 +31,16 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY ./app ./app
 RUN chown -R appuser:appgroup /app
 
+# Phiên bản của image (Epic 6C, P6-33): CI truyền --build-arg GIT_SHA=<sha> BUILD_VERSION=<tag>; CD so nhãn revision với sha cần triển khai
+ARG GIT_SHA=""
+ARG BUILD_VERSION="local"
+LABEL org.opencontainers.image.revision="${GIT_SHA}" \
+      org.opencontainers.image.version="${BUILD_VERSION}" \
+      org.opencontainers.image.source="https://github.com/NguyenThanhTrung-N2T/SmashCourt-AI" \
+      org.opencontainers.image.title="smashcourt-ai"
+ENV APP_REVISION="${GIT_SHA}" \
+    APP_VERSION="${BUILD_VERSION}"
+
 # Use non-root user
 USER appuser
 

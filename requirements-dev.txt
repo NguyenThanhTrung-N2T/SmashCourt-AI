@@ -1,0 +1,3 @@
+# Phụ thuộc chỉ dùng cho test (Epic 6C, gói 6C-1, AI-UT); cài: pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==9.2.0

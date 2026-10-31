@@ -9,8 +9,10 @@ FastAPI (Python 3.12) + `google-genai` (Gemini). Cung cấp chatbot, gợi ý đ
 .venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000    # Swagger /docs khi APP_ENV=development
 .venv/Scripts/python.exe -m compileall -q app                            # kiểm tra cú pháp nhanh
 .venv/Scripts/python.exe -m ruff check .                                # = CI (ruff 0.16.9 đã cài trong .venv; bộ luật ở ruff.toml)
+.venv/Scripts/python.exe -m pip install -r requirements-dev.txt          # pytest 9.2.0 (chỉ để test)
+.venv/Scripts/python.exe -m pytest -q                                    # AI-UT-01…05: LLM giả (tests/conftest.py), không gọi Gemini thật
 ```
-CI (`.github/workflows/ci.yml`): `ruff check .` (ruff ghim `0.16.9`, luật khai báo tường minh ở `ruff.toml`) + `compileall` → build Docker image. Đổi phiên bản ruff hoặc thêm luật phải sửa cả `ci.yml` và `ruff.toml`, chạy lint trước. Chưa có test tự động.
+CI (`.github/workflows/ci.yml`): `ruff check .` (ruff ghim `0.16.9`, luật khai báo tường minh ở `ruff.toml`) + `compileall` → build Docker image. Đổi phiên bản ruff hoặc thêm luật phải sửa cả `ci.yml` và `ruff.toml`, chạy lint trước. Test (Epic 6C, 31/10): `tests/` với fixture tự động thay client Gemini bằng LLM giả cho MỌI test; hợp đồng BE ↔ AI (6 lời gọi của `AIService`) được BE kiểm ở `AiContractSyncTests` (AI-CT-01) khi hai repo nằm cạnh nhau. Image: nhãn OCI `revision`, tên `ghcr.io/nguyenthanhtrung-n2t/smashcourt-ai:${IMAGE_TAG:-local}`, cổng 8000 chỉ bind `127.0.0.1`, `tools/ci/check-image.sh`. `GEMINI_BASE_URL` (tùy chọn) trỏ client vào LLM giả ở môi trường đo.
 
 ## Kiến trúc (chi tiết: skill `smashcourt-ai-architecture`)
 ```
@@ -27,7 +29,7 @@ app/services/prompt_builder.py → {X}_SYSTEM_PROMPT + build_{x}_prompt(req)
 - Field schema **snake_case** (BE gửi/nhận bằng `JsonNamingPolicy.SnakeCaseLower`). Response kế thừa `AiBaseResponse` (`model`, `generated_at`).
 - Mọi lời gọi Gemini đi qua `llm_service`; prompt nằm ở `prompt_builder`.
 - Đổi schema/endpoint ⇒ sửa đồng bộ `SmashCourt-BE/Integrations/AI/DTOs/*` và các service AI của BE.
-- Cấu hình qua env: `GEMINI_API_KEY`, `GEMINI_MODEL`, `APP_ENV`. Không đọc/in/sửa `.env`.
+- Cấu hình qua env: `GEMINI_API_KEY`, `GEMINI_MODEL`, `APP_ENV`, `GEMINI_BASE_URL` (chỉ môi trường đo). Không đọc/in/sửa `.env`.
 - Package mới → `requirements.txt` với version pin `==`.
 
 ## Quy tắc làm việc

@@ -11,8 +11,20 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+# Chỉ đặt ở môi trường đo hiệu năng (Epic 6C): trỏ client vào LLM giả thay cho Google; để trống thì gọi Gemini thật
+GEMINI_BASE_URL = os.getenv("GEMINI_BASE_URL", "")
 
 _client: genai.Client | None = None
+
+
+def build_client_kwargs(api_key: str, base_url: str) -> dict:
+    """
+    tham số tạo genai.Client: thêm http_options.base_url khi có GEMINI_BASE_URL (LLM giả của môi trường đo)
+    """
+    kwargs: dict = {"api_key": api_key}
+    if base_url.strip():
+        kwargs["http_options"] = types.HttpOptions(base_url=base_url.strip())
+    return kwargs
 
 
 def _get_client() -> genai.Client:
@@ -20,7 +32,7 @@ def _get_client() -> genai.Client:
     if _client is None:
         if not GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY chưa được cấu hình trong .env")
-        _client = genai.Client(api_key=GEMINI_API_KEY)
+        _client = genai.Client(**build_client_kwargs(GEMINI_API_KEY, GEMINI_BASE_URL))
     return _client
 
 

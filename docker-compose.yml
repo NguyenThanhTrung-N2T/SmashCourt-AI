@@ -1,11 +1,16 @@
 services:
   ai:
+    # Cùng tên image với CI (GHCR); `up --build` build tại chỗ thành tag `local`, `IMAGE_TAG=sha-xxxxxxx docker compose up ai` chạy đúng bản CI đã đẩy (Epic 6C, P6-33)
+    image: ghcr.io/nguyenthanhtrung-n2t/smashcourt-ai:${IMAGE_TAG:-local}
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-}
     container_name: smashcourt-ai
     ports:
-      - "8000:8000"
+      # Chỉ máy này (SEC-AI-1): BE và ngrok-ai gọi AI trong mạng Docker; AI chưa có xác thực nên không mở ra mạng LAN
+      - "127.0.0.1:8000:8000"
     env_file:
       - .env
     restart: unless-stopped
