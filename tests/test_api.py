@@ -8,6 +8,7 @@ from app.services.prompt_builder import CHATBOT_SYSTEM_PROMPT, FAQ_SYSTEM_PROMPT
 
 # ── AI-UT-05: /health ──
 
+@pytest.mark.catalog("AI-UT-05")
 def test_health_returns_ok_without_calling_llm(client, fake_llm):
     response = client.get("/health")
 
@@ -18,6 +19,7 @@ def test_health_returns_ok_without_calling_llm(client, fake_llm):
 
 # ── AI-UT-01: nội dung gửi cho LLM ──
 
+@pytest.mark.catalog("AI-UT-01")
 def test_chat_sends_chatbot_system_prompt_with_message_and_context(client, fake_llm):
     fake_llm.reply(json.dumps({"reply": "Còn sân lúc 18h", "suggestions": []}))
 
@@ -29,6 +31,7 @@ def test_chat_sends_chatbot_system_prompt_with_message_and_context(client, fake_
     assert "Chi nhánh Thủ Đức" in call["contents"]
 
 
+@pytest.mark.catalog("AI-UT-01")
 def test_faq_reply_sends_faq_system_prompt_with_question(client, fake_llm):
     fake_llm.reply("Bạn có thể hủy trước 24 giờ.")
 
@@ -40,6 +43,7 @@ def test_faq_reply_sends_faq_system_prompt_with_question(client, fake_llm):
     assert "Có thể hủy đặt sân không?" in call["contents"]
 
 
+@pytest.mark.catalog("AI-UT-01")
 def test_booking_prompt_keeps_only_the_ten_latest_bookings():
     from app.models.ai_schemas import BookingHistoryItem, BookingSuggestionRequest
 
@@ -56,6 +60,7 @@ def test_booking_prompt_keeps_only_the_ten_latest_bookings():
 
 # ── AI-UT-04: schema vào/ra ──
 
+@pytest.mark.catalog("AI-UT-04")
 def test_chat_response_has_reply_suggestions_model_session_and_timestamp(client, fake_llm):
     fake_llm.reply(json.dumps({"reply": "Chào bạn", "suggestions": ["Đặt sân", "Xem giá"]}))
 
@@ -70,6 +75,7 @@ def test_chat_response_has_reply_suggestions_model_session_and_timestamp(client,
     assert body["generated_at"]
 
 
+@pytest.mark.catalog("AI-UT-04")
 @pytest.mark.parametrize("message", ["", "x" * 2001], ids=["rong", "qua-2000-ky-tu"])
 def test_chat_rejects_invalid_message_without_calling_llm(client, fake_llm, message):
     response = client.post("/api/v1/ai/chat", json={"message": message})
@@ -78,6 +84,7 @@ def test_chat_rejects_invalid_message_without_calling_llm(client, fake_llm, mess
     assert fake_llm.calls == []
 
 
+@pytest.mark.catalog("AI-UT-04")
 def test_faq_list_needs_no_llm(client, fake_llm):
     response = client.get("/api/v1/ai/chat/faq")
 
@@ -88,6 +95,7 @@ def test_faq_list_needs_no_llm(client, fake_llm):
 
 # ── AI-UT-03: lỗi của Gemini ⇒ mã HTTP mà BE xử lý ──
 
+@pytest.mark.catalog("AI-UT-03")
 def test_chat_quota_exceeded_returns_503_with_message(client, fake_llm):
     fake_llm.fail(RuntimeError("429 RESOURCE_EXHAUSTED"))
 
@@ -97,6 +105,7 @@ def test_chat_quota_exceeded_returns_503_with_message(client, fake_llm):
     assert "giới hạn" in response.json()["detail"]
 
 
+@pytest.mark.catalog("AI-UT-03")
 def test_chat_other_llm_error_returns_500(client, fake_llm):
     fake_llm.fail(ConnectionError("connection reset"))
 
@@ -105,6 +114,7 @@ def test_chat_other_llm_error_returns_500(client, fake_llm):
     assert response.status_code == 500
 
 
+@pytest.mark.catalog("AI-UT-03")
 def test_faq_reply_quota_exceeded_returns_503(client, fake_llm):
     fake_llm.fail(RuntimeError("quota exceeded"))
 

@@ -12,6 +12,8 @@ from app.services.llm_service import LlmError, QuotaExceedError, call_gemini_str
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
+pytestmark = pytest.mark.catalog("OB-AI-1")
+
 
 @pytest.fixture
 def reader(monkeypatch: pytest.MonkeyPatch) -> InMemoryMetricReader:

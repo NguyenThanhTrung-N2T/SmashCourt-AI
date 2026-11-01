@@ -38,8 +38,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      # JUnit XML mang mã danh mục của từng test (marker catalog) cho dashboard "Kiểm thử" (TADSS-Runtime/perf/board.py ci ai)
       - name: Run tests (pytest)
-        run: python -m pytest -q
+        run: python -m pytest -q --junitxml=test-results/junit.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-test-results
+          path: test-results/
 
       # SEC-AI-4: gói Python có lỗ hổng đã biết (kể cả gói kéo theo) hoặc không quét được ⇒ job đỏ
       - name: Check vulnerable packages (pip-audit)

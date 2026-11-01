@@ -55,3 +55,11 @@ def fake_llm(monkeypatch: pytest.MonkeyPatch) -> FakeLlm:
 def client() -> Iterator[TestClient]:
     with TestClient(app, raise_server_exceptions=False) as test_client:
         yield test_client
+
+
+@pytest.fixture(autouse=True)
+def _catalog_property(request: pytest.FixtureRequest, record_property) -> None:
+    # Mã của marker catalog ⇒ thuộc tính "catalog" của testcase trong JUnit XML (pytest --junitxml), dashboard "Kiểm thử" đọc lại
+    codes = sorted({code for marker in request.node.iter_markers("catalog") for code in marker.args})
+    if codes:
+        record_property("catalog", ",".join(codes))

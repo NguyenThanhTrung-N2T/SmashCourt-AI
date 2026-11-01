@@ -34,6 +34,7 @@ async def _structured(fake_llm, text: str) -> dict:
     return data
 
 
+@pytest.mark.catalog("AI-UT-02")
 @pytest.mark.parametrize(
     "raw",
     [
@@ -51,6 +52,7 @@ def test_structured_response_is_parsed_from_common_llm_shapes(fake_llm, raw):
     assert data == {"reply": "Chào bạn", "suggestions": ["Đặt sân"]}
 
 
+@pytest.mark.catalog("AI-UT-02")
 def test_structured_call_sends_system_prompt_and_asks_for_json(fake_llm):
     import asyncio
 
@@ -64,6 +66,7 @@ def test_structured_call_sends_system_prompt_and_asks_for_json(fake_llm):
     assert call["config"].response_mime_type == "application/json"
 
 
+@pytest.mark.catalog("AI-UT-02")
 def test_structured_response_that_is_not_json_raises(fake_llm):
     import asyncio
 
@@ -75,6 +78,7 @@ def test_structured_response_that_is_not_json_raises(fake_llm):
 
 # ── AI-UT-03: lỗi của Gemini được đổi thành lỗi có nghĩa ──
 
+@pytest.mark.catalog("AI-UT-03")
 @pytest.mark.parametrize(
     "message",
     ["429 Too Many Requests", "RESOURCE_EXHAUSTED: limit", "Quota exceeded for metric"],
@@ -88,6 +92,7 @@ def test_quota_errors_become_quota_exceed_error(fake_llm, message):
         asyncio.run(call_gemini_structured("system", "user"))
 
 
+@pytest.mark.catalog("AI-UT-03")
 def test_other_errors_become_llm_error_for_both_call_styles(fake_llm):
     import asyncio
 
