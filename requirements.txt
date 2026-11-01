@@ -3,3 +3,9 @@ uvicorn[standard]==0.34.0
 python-dotenv==1.2.2
 httpx==0.28.1
 google-genai==1.10.0
+# OpenTelemetry (Epic 6C, gói 6C-3a, OB-AI-1): metric/trace/log qua OTLP, chỉ bật khi OTEL_ENABLED=true; bản instrumentation 0.66b2 đi cùng SDK 1.45.2
+opentelemetry-api==1.45.2
+opentelemetry-sdk==1.45.2
+opentelemetry-exporter-otlp-proto-http==1.45.2
+opentelemetry-instrumentation-fastapi==0.66b2
+opentelemetry-instrumentation-httpx==0.66b2

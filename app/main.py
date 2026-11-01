@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 from app.routers import analytics_router, chat_router, suggest_router
+from app.services.telemetry import setup_telemetry
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -48,6 +49,9 @@ app = FastAPI(
     docs_url=_docs_url,
     redoc_url=_redoc_url,
 )
+
+# metric/trace/log qua otlp (epic 6c, ob-ai-1): chỉ bật khi OTEL_ENABLED=true
+setup_telemetry(app)
 
 app.add_middleware(
     CORSMiddleware,

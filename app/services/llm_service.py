@@ -2,10 +2,13 @@
 import json
 import logging
 import os
+import time
 
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+
+from app.services import telemetry
 
 load_dotenv()
 
@@ -15,6 +18,8 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 GEMINI_BASE_URL = os.getenv("GEMINI_BASE_URL", "")
 
 _client: genai.Client | None = None
+# metric lời gọi gemini (ob-ai-1); test thay bằng meter riêng
+gemini_metrics = telemetry.gemini_metrics
 
 
 def build_client_kwargs(api_key: str, base_url: str) -> dict:
@@ -36,6 +41,28 @@ def _get_client() -> genai.Client:
     return _client
 
 
+async def _generate(operation: str, **kwargs):
+    """
+    mọi lời gọi gemini đi qua đây để đo độ trễ, kết quả (ok / quota / error) và số token
+    """
+    client = _get_client()
+    started = time.perf_counter()
+    try:
+        response = await client.aio.models.generate_content(model=GEMINI_MODEL, **kwargs)
+    except Exception as e:
+        outcome = telemetry.OUTCOME_QUOTA if _is_quota_error(e) else telemetry.OUTCOME_ERROR
+        gemini_metrics.record(operation=operation, model=GEMINI_MODEL, outcome=outcome, duration_s=time.perf_counter() - started)
+        raise
+    gemini_metrics.record(
+        operation=operation,
+        model=GEMINI_MODEL,
+        outcome=telemetry.OUTCOME_OK,
+        duration_s=time.perf_counter() - started,
+        usage=getattr(response, "usage_metadata", None),
+    )
+    return response
+
+
 async def call_gemini(message: str, context: str | None = None) -> tuple[str, str]:
     """
     gửi tin nhắn text thuần tới gemini
@@ -44,10 +71,7 @@ async def call_gemini(message: str, context: str | None = None) -> tuple[str, st
     if context:
         prompt = f"Context:\n{context}\n\nUser message:\n{message}"
 
-    response = await _get_client().aio.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-    )
+    response = await _generate("plain", contents=prompt)
     return response.text, GEMINI_MODEL
 
 
@@ -64,11 +88,7 @@ async def call_gemini_structured(
     )
 
     try:
-        response = await _get_client().aio.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=user_content,
-            config=config,
-        )
+        response = await _generate("structured", contents=user_content, config=config)
     except Exception as e:
         _handle_gemini_error(e)
         raise
@@ -115,11 +135,7 @@ async def call_gemini_text(
     )
 
     try:
-        response = await _get_client().aio.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=user_content,
-            config=config,
-        )
+        response = await _generate("text", contents=user_content, config=config)
     except Exception as e:
         _handle_gemini_error(e)
         raise
@@ -141,9 +157,13 @@ class LlmError(Exception):
     pass
 
 
-def _handle_gemini_error(e: Exception) -> None:
+def _is_quota_error(e: Exception) -> bool:
     err_str = str(e).lower()
-    if "429" in err_str or "resource_exhausted" in err_str or "quota" in err_str:
+    return "429" in err_str or "resource_exhausted" in err_str or "quota" in err_str
+
+
+def _handle_gemini_error(e: Exception) -> None:
+    if _is_quota_error(e):
         raise QuotaExceedError(
             "AI tạm thời không khả dụng do đã hết giới hạn miễn phí. "
             "Vui lòng thử lại sau vài phút."

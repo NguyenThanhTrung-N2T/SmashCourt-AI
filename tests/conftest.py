@@ -16,11 +16,17 @@ class FakeLlm:
 
     def __init__(self) -> None:
         self.calls: list[dict] = []
-        self._outcomes: list[str | Exception] = []
+        self._outcomes: list[SimpleNamespace | Exception] = []
         self.aio = SimpleNamespace(models=SimpleNamespace(generate_content=self._generate_content))
 
     def reply(self, *texts: str) -> "FakeLlm":
-        self._outcomes.extend(texts)
+        self._outcomes.extend(SimpleNamespace(text=text) for text in texts)
+        return self
+
+    def reply_with_usage(self, text: str, prompt_tokens: int, output_tokens: int) -> "FakeLlm":
+        # response kèm usage_metadata như Gemini thật (số token vào/ra) cho test metric OB-AI-1
+        usage = SimpleNamespace(prompt_token_count=prompt_tokens, candidates_token_count=output_tokens)
+        self._outcomes.append(SimpleNamespace(text=text, usage_metadata=usage))
         return self
 
     def fail(self, error: Exception) -> "FakeLlm":
@@ -34,7 +40,7 @@ class FakeLlm:
         outcome = self._outcomes.pop(0)
         if isinstance(outcome, Exception):
             raise outcome
-        return SimpleNamespace(text=outcome)
+        return outcome
 
 
 @pytest.fixture(autouse=True)
